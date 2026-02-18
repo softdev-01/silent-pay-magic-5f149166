@@ -15,6 +15,7 @@ import { UserRole } from "@/lib/types";
 const navItems: Record<UserRole, { label: string; path: string; icon: ReactNode }[]> = {
   customer: [
     { label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+    { label: "Invoices", path: "/customer/invoices", icon: <FileText className="h-4 w-4" /> },
     { label: "My Wallet", path: "/wallet", icon: <Wallet className="h-4 w-4" /> },
     { label: "Payment History", path: "/payments", icon: <CreditCard className="h-4 w-4" /> },
     { label: "Services", path: "/services", icon: <Zap className="h-4 w-4" /> },

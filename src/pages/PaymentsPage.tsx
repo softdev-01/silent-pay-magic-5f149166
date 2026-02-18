@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/lib/auth-context";
-import { mockInvoices } from "@/lib/mock-data";
+import { useInvoices } from "@/lib/invoice-context";
 
 export default function PaymentsPage() {
   const { user } = useAuth();
+  const { invoices: mockInvoices } = useInvoices();
   const invoices = user?.role === "customer"
     ? mockInvoices.filter((i) => i.customerId === "c1")
     : user?.role === "provider"
