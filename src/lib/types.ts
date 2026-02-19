@@ -43,6 +43,32 @@ export interface Service {
   currency: string;
   category: string;
   status: "active" | "completed" | "cancelled";
+  deliveryAvailable?: boolean;
+  deliveryFee?: number;
+}
+
+export interface OrderItem {
+  serviceId: string;
+  serviceName: string;
+  providerId: string;
+  providerName: string;
+  price: number;
+  quantity: number;
+}
+
+export interface Order {
+  id: string;
+  customerId: string;
+  customerName: string;
+  items: OrderItem[];
+  deliveryRequested: boolean;
+  deliveryAddress?: string;
+  deliveryFee: number;
+  subtotal: number;
+  total: number;
+  status: "pending" | "accepted" | "invoiced" | "completed" | "cancelled";
+  createdAt: string;
+  notes?: string;
 }
 
 export interface Transaction {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, CreditCard, FileText, Settings, Users, BarChart3,
-  Wallet, ShieldCheck, Menu, X, LogOut, ChevronDown, Zap
+  Wallet, ShieldCheck, Menu, X, LogOut, ChevronDown, Zap, ShoppingCart, Package
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
@@ -15,14 +15,16 @@ import { UserRole } from "@/lib/types";
 const navItems: Record<UserRole, { label: string; path: string; icon: ReactNode }[]> = {
   customer: [
     { label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+    { label: "Services", path: "/services", icon: <Zap className="h-4 w-4" /> },
+    { label: "My Orders", path: "/customer/orders", icon: <ShoppingCart className="h-4 w-4" /> },
     { label: "Invoices", path: "/customer/invoices", icon: <FileText className="h-4 w-4" /> },
     { label: "My Wallet", path: "/wallet", icon: <Wallet className="h-4 w-4" /> },
     { label: "Payment History", path: "/payments", icon: <CreditCard className="h-4 w-4" /> },
-    { label: "Services", path: "/services", icon: <Zap className="h-4 w-4" /> },
     { label: "Settings", path: "/settings", icon: <Settings className="h-4 w-4" /> },
   ],
   provider: [
     { label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+    { label: "Orders", path: "/provider/orders", icon: <Package className="h-4 w-4" /> },
     { label: "Invoices", path: "/invoices", icon: <FileText className="h-4 w-4" /> },
     { label: "Services", path: "/services", icon: <Zap className="h-4 w-4" /> },
     { label: "Payments", path: "/payments", icon: <CreditCard className="h-4 w-4" /> },
