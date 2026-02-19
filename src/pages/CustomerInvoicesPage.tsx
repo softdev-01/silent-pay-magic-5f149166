@@ -5,18 +5,20 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useInvoices } from "@/lib/invoice-context";
 import { useAuth } from "@/lib/auth-context";
-import { CreditCard, CheckCircle } from "lucide-react";
+import { CreditCard, CheckCircle, Receipt, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Invoice } from "@/lib/types";
+import { Separator } from "@/components/ui/separator";
 
 export default function CustomerInvoicesPage() {
   const { user } = useAuth();
   const { invoices, payInvoice } = useInvoices();
   const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null);
+  const [receiptInvoice, setReceiptInvoice] = useState<Invoice | null>(null);
 
   const myInvoices = invoices.filter((i) => i.customerId === user?.id);
   const pendingInvoices = myInvoices.filter((i) => i.status === "pending");
@@ -30,8 +32,14 @@ export default function CustomerInvoicesPage() {
       return;
     }
     payInvoice(payingInvoice.id);
+    const paidInv = { ...payingInvoice, status: "paid" as const, paidAt: new Date().toISOString().slice(0, 10) };
     toast({ title: "Payment successful!", description: `$${payingInvoice.amount.toFixed(2)} paid to ${payingInvoice.providerName} via PayPal.` });
     setPayingInvoice(null);
+    setReceiptInvoice(paidInv);
+  };
+
+  const viewReceipt = (inv: Invoice) => {
+    setReceiptInvoice(inv);
   };
 
   return (
@@ -53,7 +61,7 @@ export default function CustomerInvoicesPage() {
                 <TableRow>
                   <TableHead>Invoice #</TableHead>
                   <TableHead>Provider</TableHead>
-                  <TableHead>Service</TableHead>
+                  <TableHead>Service(s)</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Action</TableHead>
@@ -94,10 +102,11 @@ export default function CustomerInvoicesPage() {
               <TableRow>
                 <TableHead>Invoice #</TableHead>
                 <TableHead>Provider</TableHead>
-                <TableHead>Service</TableHead>
+                <TableHead>Service(s)</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-right">Receipt</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -109,6 +118,13 @@ export default function CustomerInvoicesPage() {
                   <TableCell>${inv.amount.toFixed(2)}</TableCell>
                   <TableCell>{inv.paidAt ?? inv.createdAt}</TableCell>
                   <TableCell><StatusBadge status={inv.status} /></TableCell>
+                  <TableCell className="text-right">
+                    {inv.status === "paid" && (
+                      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => viewReceipt(inv)}>
+                        <Receipt className="h-3.5 w-3.5" /> View
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -127,11 +143,96 @@ export default function CustomerInvoicesPage() {
               <span className="text-foreground">{payingInvoice?.serviceName}</span> via PayPal.
             </DialogDescription>
           </DialogHeader>
+          {payingInvoice?.lineItems && payingInvoice.lineItems.length > 1 && (
+            <div className="rounded-md border p-3">
+              <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Breakdown</p>
+              {payingInvoice.lineItems.map((li) => (
+                <div key={li.serviceId} className="flex justify-between text-sm">
+                  <span>{li.serviceName}</span>
+                  <span className="font-medium">${li.amount.toFixed(2)}</span>
+                </div>
+              ))}
+              <Separator className="my-2" />
+              <div className="flex justify-between text-sm font-semibold">
+                <span>Total</span>
+                <span>${payingInvoice.amount.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setPayingInvoice(null)}>Cancel</Button>
             <Button onClick={handlePay} className="gap-1.5">
               <CreditCard className="h-4 w-4" /> Pay ${payingInvoice?.amount.toFixed(2)}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receipt dialog */}
+      <Dialog open={!!receiptInvoice} onOpenChange={(open) => !open && setReceiptInvoice(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-primary" /> Payment Receipt
+            </DialogTitle>
+          </DialogHeader>
+          {receiptInvoice && (
+            <div className="space-y-4">
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Invoice #</span>
+                  <span className="font-medium">{receiptInvoice.invoiceNumber}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Provider</span>
+                  <span className="font-medium">{receiptInvoice.providerName}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Date Paid</span>
+                  <span className="font-medium">{receiptInvoice.paidAt}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Payment Method</span>
+                  <span className="font-medium">PayPal</span>
+                </div>
+
+                <Separator />
+
+                {receiptInvoice.lineItems && receiptInvoice.lineItems.length > 0 ? (
+                  <>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">Services</p>
+                    {receiptInvoice.lineItems.map((li) => (
+                      <div key={li.serviceId} className="flex justify-between text-sm">
+                        <span>{li.serviceName}</span>
+                        <span>${li.amount.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <Separator />
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Service</span>
+                      <span>{receiptInvoice.serviceName}</span>
+                    </div>
+                    <Separator />
+                  </>
+                )}
+
+                <div className="flex justify-between text-base font-semibold">
+                  <span>Total Paid</span>
+                  <span className="text-primary">${receiptInvoice.amount.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="rounded-md border border-green-200 bg-green-50 p-3 text-center dark:border-green-800 dark:bg-green-950">
+                <CheckCircle className="mx-auto mb-1 h-6 w-6 text-green-600 dark:text-green-400" />
+                <p className="text-sm font-medium text-green-700 dark:text-green-300">Payment Complete</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReceiptInvoice(null)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

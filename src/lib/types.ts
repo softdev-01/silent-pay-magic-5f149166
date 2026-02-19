@@ -11,6 +11,12 @@ export interface User {
   createdAt: string;
 }
 
+export interface InvoiceLineItem {
+  serviceId: string;
+  serviceName: string;
+  amount: number;
+}
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
@@ -19,6 +25,7 @@ export interface Invoice {
   providerId: string;
   providerName: string;
   serviceName: string;
+  lineItems?: InvoiceLineItem[];
   amount: number;
   currency: string;
   status: "pending" | "paid" | "failed" | "refunded";
