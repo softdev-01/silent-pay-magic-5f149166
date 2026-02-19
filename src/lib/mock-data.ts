@@ -18,11 +18,11 @@ export const mockInvoices: Invoice[] = [
 ];
 
 export const mockServices: Service[] = [
-  { id: "s1", name: "Pipe Repair", description: "Fix leaking or broken pipes", providerId: "p1", providerName: "QuickFix Plumbing", price: 150, currency: "USD", category: "Plumbing", status: "active" },
-  { id: "s2", name: "Faucet Installation", description: "Install new faucets", providerId: "p1", providerName: "QuickFix Plumbing", price: 95, currency: "USD", category: "Plumbing", status: "active" },
-  { id: "s3", name: "Drain Unclogging", description: "Clear blocked drains", providerId: "p1", providerName: "QuickFix Plumbing", price: 75, currency: "USD", category: "Plumbing", status: "active" },
-  { id: "s4", name: "Deep House Cleaning", description: "Full home deep clean", providerId: "p2", providerName: "SparkClean Co.", price: 220, currency: "USD", category: "Cleaning", status: "active" },
-  { id: "s5", name: "Office Cleaning", description: "Professional office cleaning", providerId: "p2", providerName: "SparkClean Co.", price: 180, currency: "USD", category: "Cleaning", status: "active" },
+  { id: "s1", name: "Pipe Repair", description: "Fix leaking or broken pipes", providerId: "p1", providerName: "QuickFix Plumbing", price: 150, currency: "USD", category: "Plumbing", status: "active", deliveryAvailable: true, deliveryFee: 25 },
+  { id: "s2", name: "Faucet Installation", description: "Install new faucets", providerId: "p1", providerName: "QuickFix Plumbing", price: 95, currency: "USD", category: "Plumbing", status: "active", deliveryAvailable: true, deliveryFee: 15 },
+  { id: "s3", name: "Drain Unclogging", description: "Clear blocked drains", providerId: "p1", providerName: "QuickFix Plumbing", price: 75, currency: "USD", category: "Plumbing", status: "active", deliveryAvailable: false },
+  { id: "s4", name: "Deep House Cleaning", description: "Full home deep clean", providerId: "p2", providerName: "SparkClean Co.", price: 220, currency: "USD", category: "Cleaning", status: "active", deliveryAvailable: true, deliveryFee: 30 },
+  { id: "s5", name: "Office Cleaning", description: "Professional office cleaning", providerId: "p2", providerName: "SparkClean Co.", price: 180, currency: "USD", category: "Cleaning", status: "active", deliveryAvailable: true, deliveryFee: 20 },
 ];
 
 export const mockTransactions: Transaction[] = [
