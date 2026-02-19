@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useInvoices } from "@/lib/invoice-context";
 import { useAuth } from "@/lib/auth-context";
-import { Plus, Send } from "lucide-react";
+import { Plus, Send, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -14,35 +14,46 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockUsers } from "@/lib/mock-data";
-import { mockServices } from "@/lib/mock-data";
+import { mockUsers, mockServices } from "@/lib/mock-data";
+import { InvoiceLineItem } from "@/lib/types";
 
 export default function InvoicesPage() {
   const { user } = useAuth();
   const { invoices, addInvoice } = useInvoices();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [customerId, setCustomerId] = useState("");
-  const [serviceId, setServiceId] = useState("");
-  const [amount, setAmount] = useState("");
+  const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = useState("");
 
   const providerInvoices = invoices.filter((i) => i.providerId === user?.id);
   const customers = mockUsers.filter((u) => u.role === "customer");
   const providerServices = mockServices.filter((s) => s.providerId === user?.id);
 
-  const selectedService = providerServices.find((s) => s.id === serviceId);
+  const totalAmount = lineItems.reduce((sum, li) => sum + li.amount, 0);
 
-  const handleServiceChange = (id: string) => {
-    setServiceId(id);
-    const svc = providerServices.find((s) => s.id === id);
-    if (svc) setAmount(svc.price.toString());
+  const handleAddService = () => {
+    const svc = providerServices.find((s) => s.id === selectedServiceId);
+    if (!svc || lineItems.some((li) => li.serviceId === svc.id)) return;
+    setLineItems((prev) => [...prev, { serviceId: svc.id, serviceName: svc.name, amount: svc.price }]);
+    setSelectedServiceId("");
+  };
+
+  const handleRemoveItem = (serviceId: string) => {
+    setLineItems((prev) => prev.filter((li) => li.serviceId !== serviceId));
+  };
+
+  const handleUpdateAmount = (serviceId: string, newAmount: string) => {
+    setLineItems((prev) =>
+      prev.map((li) => li.serviceId === serviceId ? { ...li, amount: parseFloat(newAmount) || 0 } : li)
+    );
   };
 
   const handleSendInvoice = () => {
     const customer = customers.find((c) => c.id === customerId);
-    const service = providerServices.find((s) => s.id === serviceId);
-    if (!customer || !service || !user) return;
+    if (!customer || !user || lineItems.length === 0) return;
 
     const invoiceNum = `INV-2026-${String(invoices.length + 1).padStart(3, "0")}`;
+    const serviceNames = lineItems.map((li) => li.serviceName).join(", ");
     addInvoice({
       id: `inv-${Date.now()}`,
       invoiceNumber: invoiceNum,
@@ -50,19 +61,24 @@ export default function InvoicesPage() {
       customerName: customer.name,
       providerId: user.id,
       providerName: user.name,
-      serviceName: service.name,
-      amount: parseFloat(amount),
+      serviceName: serviceNames,
+      lineItems,
+      amount: totalAmount,
       currency: "USD",
       status: "pending",
       createdAt: new Date().toISOString().slice(0, 10),
     });
 
-    toast({ title: "Invoice sent!", description: `${invoiceNum} sent to ${customer.name} for $${parseFloat(amount).toFixed(2)}.` });
+    toast({ title: "Invoice sent!", description: `${invoiceNum} sent to ${customer.name} for $${totalAmount.toFixed(2)}.` });
     setDialogOpen(false);
     setCustomerId("");
-    setServiceId("");
-    setAmount("");
+    setLineItems([]);
+    setSelectedServiceId("");
   };
+
+  const availableServices = providerServices.filter(
+    (s) => !lineItems.some((li) => li.serviceId === s.id)
+  );
 
   return (
     <DashboardLayout>
@@ -79,7 +95,7 @@ export default function InvoicesPage() {
               <TableRow>
                 <TableHead>Invoice #</TableHead>
                 <TableHead>Customer</TableHead>
-                <TableHead>Service</TableHead>
+                <TableHead>Service(s)</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
@@ -103,7 +119,7 @@ export default function InvoicesPage() {
 
       {/* Create & Send Invoice dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Send Invoice to Customer</DialogTitle>
           </DialogHeader>
@@ -119,25 +135,67 @@ export default function InvoicesPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Add services */}
             <div className="grid gap-2">
-              <Label>Service</Label>
-              <Select value={serviceId} onValueChange={handleServiceChange}>
-                <SelectTrigger><SelectValue placeholder="Select service" /></SelectTrigger>
-                <SelectContent>
-                  {providerServices.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name} — ${s.price}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Add Services</Label>
+              <div className="flex gap-2">
+                <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="Select service" /></SelectTrigger>
+                  <SelectContent>
+                    {availableServices.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name} — ${s.price}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="button" size="sm" onClick={handleAddService} disabled={!selectedServiceId}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label>Amount (USD)</Label>
-              <Input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
-            </div>
+
+            {/* Line items */}
+            {lineItems.length > 0 && (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Service</TableHead>
+                      <TableHead className="w-28">Amount</TableHead>
+                      <TableHead className="w-10" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {lineItems.map((li) => (
+                      <TableRow key={li.serviceId}>
+                        <TableCell className="text-sm">{li.serviceName}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number" min="0" step="0.01"
+                            value={li.amount}
+                            onChange={(e) => handleUpdateAmount(li.serviceId, e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemoveItem(li.serviceId)}>
+                            <X className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow>
+                      <TableCell className="font-semibold text-sm">Total</TableCell>
+                      <TableCell className="font-semibold text-sm" colSpan={2}>${totalAmount.toFixed(2)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSendInvoice} disabled={!customerId || !serviceId || !amount} className="gap-1.5">
+            <Button onClick={handleSendInvoice} disabled={!customerId || lineItems.length === 0} className="gap-1.5">
               <Send className="h-4 w-4" /> Send Invoice
             </Button>
           </DialogFooter>
