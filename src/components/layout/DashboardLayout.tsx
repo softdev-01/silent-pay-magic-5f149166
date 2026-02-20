@@ -28,6 +28,7 @@ const navItems: Record<UserRole, { label: string; path: string; icon: ReactNode 
     { label: "Invoices", path: "/invoices", icon: <FileText className="h-4 w-4" /> },
     { label: "Services", path: "/services", icon: <Zap className="h-4 w-4" /> },
     { label: "Payments", path: "/payments", icon: <CreditCard className="h-4 w-4" /> },
+    { label: "Customer Analytics", path: "/provider/analytics", icon: <BarChart3 className="h-4 w-4" /> },
     { label: "Settings", path: "/settings", icon: <Settings className="h-4 w-4" /> },
   ],
   admin: [
