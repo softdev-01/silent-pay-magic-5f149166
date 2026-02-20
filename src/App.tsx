@@ -20,6 +20,7 @@ import SettingsPage from "./pages/SettingsPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminTransactionsPage from "./pages/AdminTransactionsPage";
 import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
+import ProviderAnalyticsPage from "./pages/ProviderAnalyticsPage";
 import AdminSecurityPage from "./pages/AdminSecurityPage";
 import NotFound from "./pages/NotFound";
 
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/customer/invoices" element={<CustomerInvoicesPage />} />
                 <Route path="/customer/orders" element={<CustomerOrdersPage />} />
                 <Route path="/provider/orders" element={<ProviderOrdersPage />} />
+                <Route path="/provider/analytics" element={<ProviderAnalyticsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/admin/users" element={<AdminUsersPage />} />
                 <Route path="/admin/transactions" element={<AdminTransactionsPage />} />
