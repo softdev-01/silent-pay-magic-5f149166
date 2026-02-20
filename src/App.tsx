@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
 import { InvoiceProvider } from "@/lib/invoice-context";
 import { OrderProvider } from "@/lib/order-context";
+import { ServiceProvider } from "@/lib/service-context";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -32,29 +33,31 @@ const App = () => (
       <AuthProvider>
         <InvoiceProvider>
           <OrderProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/wallet" element={<WalletPage />} />
-                <Route path="/payments" element={<PaymentsPage />} />
-                <Route path="/services" element={<ServicesPage />} />
-                <Route path="/invoices" element={<InvoicesPage />} />
-                <Route path="/customer/invoices" element={<CustomerInvoicesPage />} />
-                <Route path="/customer/orders" element={<CustomerOrdersPage />} />
-                <Route path="/provider/orders" element={<ProviderOrdersPage />} />
-                <Route path="/provider/analytics" element={<ProviderAnalyticsPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/admin/users" element={<AdminUsersPage />} />
-                <Route path="/admin/transactions" element={<AdminTransactionsPage />} />
-                <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
-                <Route path="/admin/security" element={<AdminSecurityPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            <ServiceProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/wallet" element={<WalletPage />} />
+                  <Route path="/payments" element={<PaymentsPage />} />
+                  <Route path="/services" element={<ServicesPage />} />
+                  <Route path="/invoices" element={<InvoicesPage />} />
+                  <Route path="/customer/invoices" element={<CustomerInvoicesPage />} />
+                  <Route path="/customer/orders" element={<CustomerOrdersPage />} />
+                  <Route path="/provider/orders" element={<ProviderOrdersPage />} />
+                  <Route path="/provider/analytics" element={<ProviderAnalyticsPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/admin/users" element={<AdminUsersPage />} />
+                  <Route path="/admin/transactions" element={<AdminTransactionsPage />} />
+                  <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+                  <Route path="/admin/security" element={<AdminSecurityPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </ServiceProvider>
           </OrderProvider>
         </InvoiceProvider>
       </AuthProvider>
