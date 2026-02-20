@@ -6,6 +6,8 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { mockServices } from "@/lib/mock-data";
 import { useAuth } from "@/lib/auth-context";
 import { useOrders } from "@/lib/order-context";
+import { useServices } from "@/lib/service-context";
+import { AddServiceDialog } from "@/components/AddServiceDialog";
 import { Zap, ShoppingCart, Plus, Check, Trash2, Truck, MapPin, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -24,18 +26,19 @@ import { Badge } from "@/components/ui/badge";
 export default function ServicesPage() {
   const { user } = useAuth();
   const { cart, addToCart, removeFromCart, clearCart, placeOrder } = useOrders();
+  const { services: allServices } = useServices();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [deliveryRequested, setDeliveryRequested] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [notes, setNotes] = useState("");
 
   const services = user?.role === "provider"
-    ? mockServices.filter((s) => s.providerId === user.id)
-    : mockServices;
+    ? allServices.filter((s) => s.providerId === user.id)
+    : allServices;
 
   const isInCart = (serviceId: string) => cart.some((i) => i.serviceId === serviceId);
 
-  const handleAddToCart = (service: typeof mockServices[0]) => {
+  const handleAddToCart = (service: typeof allServices[0]) => {
     addToCart({
       serviceId: service.id,
       serviceName: service.name,
@@ -50,7 +53,7 @@ export default function ServicesPage() {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryFee = deliveryRequested
     ? cart.reduce((sum, item) => {
-        const svc = mockServices.find((s) => s.id === item.serviceId);
+        const svc = allServices.find((s) => s.id === item.serviceId);
         return sum + (svc?.deliveryFee ?? 0);
       }, 0)
     : 0;
@@ -87,6 +90,14 @@ export default function ServicesPage() {
 
   return (
     <DashboardLayout>
+      {/* Provider: Add Service button */}
+      {user?.role === "provider" && (
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold">My Services</h2>
+          <AddServiceDialog />
+        </div>
+      )}
+
       {/* Cart button for customers */}
       {user?.role === "customer" && (
         <div className="mb-4 flex items-center justify-between">
