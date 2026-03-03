@@ -14,16 +14,326 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      invoice_line_items: {
+        Row: {
+          amount: number
+          id: string
+          invoice_id: string
+          service_id: string | null
+          service_name: string
+        }
+        Insert: {
+          amount?: number
+          id?: string
+          invoice_id: string
+          service_id?: string | null
+          service_name: string
+        }
+        Update: {
+          amount?: number
+          id?: string
+          invoice_id?: string
+          service_id?: string | null
+          service_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_line_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          customer_id: string
+          id: string
+          invoice_number: string
+          paid_at: string | null
+          provider_id: string
+          service_name: string
+          status: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          customer_id: string
+          id?: string
+          invoice_number: string
+          paid_at?: string | null
+          provider_id: string
+          service_name?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          id?: string
+          invoice_number?: string
+          paid_at?: string | null
+          provider_id?: string
+          service_name?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          price: number
+          provider_id: string
+          quantity: number
+          service_id: string | null
+          service_name: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          price?: number
+          provider_id: string
+          quantity?: number
+          service_id?: string | null
+          service_name: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          price?: number
+          provider_id?: string
+          quantity?: number
+          service_id?: string | null
+          service_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_id: string
+          delivery_address: string | null
+          delivery_fee: number
+          delivery_requested: boolean
+          id: string
+          notes: string | null
+          status: string
+          subtotal: number
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          delivery_address?: string | null
+          delivery_fee?: number
+          delivery_requested?: boolean
+          id?: string
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          delivery_address?: string | null
+          delivery_fee?: number
+          delivery_requested?: boolean
+          id?: string
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+          updated_at: string
+          user_id: string
+          wallet_linked: boolean
+          wallet_provider: string | null
+        }
+        Insert: {
+          avatar?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role?: string
+          updated_at?: string
+          user_id: string
+          wallet_linked?: boolean
+          wallet_provider?: string | null
+        }
+        Update: {
+          avatar?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+          wallet_linked?: boolean
+          wallet_provider?: string | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          category: string
+          created_at: string
+          currency: string
+          delivery_available: boolean | null
+          delivery_fee: number | null
+          description: string
+          id: string
+          name: string
+          price: number
+          provider_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          currency?: string
+          delivery_available?: boolean | null
+          delivery_fee?: number | null
+          description?: string
+          id?: string
+          name: string
+          price?: number
+          provider_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          currency?: string
+          delivery_available?: boolean | null
+          delivery_fee?: number | null
+          description?: string
+          id?: string
+          name?: string
+          price?: number
+          provider_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          idempotency_key: string
+          invoice_id: string
+          method: string
+          status: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key: string
+          invoice_id: string
+          method?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key?: string
+          invoice_id?: string
+          method?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +460,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
