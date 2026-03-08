@@ -23,6 +23,7 @@ import AdminTransactionsPage from "./pages/AdminTransactionsPage";
 import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
 import ProviderAnalyticsPage from "./pages/ProviderAnalyticsPage";
 import AdminSecurityPage from "./pages/AdminSecurityPage";
+import PublicPayPage from "./pages/PublicPayPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
