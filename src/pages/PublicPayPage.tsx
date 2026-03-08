@@ -37,13 +37,6 @@ export default function PublicPayPage() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("public-invoice", {
-        body: null,
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      // supabase.functions.invoke doesn't support query params easily, use fetch instead
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/public-invoice?id=${invoiceId}`,
