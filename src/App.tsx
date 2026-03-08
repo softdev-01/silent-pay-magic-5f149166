@@ -24,6 +24,7 @@ import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
 import ProviderAnalyticsPage from "./pages/ProviderAnalyticsPage";
 import AdminSecurityPage from "./pages/AdminSecurityPage";
 import PublicPayPage from "./pages/PublicPayPage";
+import ProviderPaymentsPage from "./pages/ProviderPaymentsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
                   <Route path="/customer/orders" element={<CustomerOrdersPage />} />
                   <Route path="/provider/orders" element={<ProviderOrdersPage />} />
                   <Route path="/provider/analytics" element={<ProviderAnalyticsPage />} />
+                  <Route path="/provider/payments" element={<ProviderPaymentsPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/admin/users" element={<AdminUsersPage />} />
                   <Route path="/admin/transactions" element={<AdminTransactionsPage />} />

@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { CheckCircle, CreditCard, Loader2, AlertCircle, Receipt } from "lucide-react";
 
 interface PublicInvoice {
@@ -26,6 +28,8 @@ export default function PublicPayPage() {
   const [error, setError] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   const [paid, setPaid] = useState(false);
+  const [payerName, setPayerName] = useState("");
+  const [payerEmail, setPayerEmail] = useState("");
 
   useEffect(() => {
     if (!invoiceId) return;
@@ -49,6 +53,7 @@ export default function PublicPayPage() {
 
       const inv = await res.json();
       setInvoice(inv);
+      setPayerName(inv.customerName || "");
       if (inv.status === "paid") setPaid(true);
     } catch {
       setError("Failed to load invoice");
@@ -57,14 +62,35 @@ export default function PublicPayPage() {
     }
   };
 
-  const handlePayPal = () => {
-    if (!invoice) return;
+  const handlePayPal = async () => {
+    if (!invoice || !payerName.trim()) return;
     setPaying(true);
-    // Simulate PayPal redirect — in production this would redirect to PayPal checkout
-    setTimeout(() => {
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/process-payment`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            invoiceId: invoice.id,
+            payerName: payerName.trim(),
+            payerEmail: payerEmail.trim() || null,
+          }),
+        }
+      );
+
+      if (res.ok) {
+        setPaid(true);
+      } else {
+        const data = await res.json();
+        setError(data.error || "Payment failed");
+      }
+    } catch {
+      setError("Payment failed. Please try again.");
+    } finally {
       setPaying(false);
-      setPaid(true);
-    }, 2000);
+    }
   };
 
   if (loading) {
@@ -83,7 +109,7 @@ export default function PublicPayPage() {
             <AlertCircle className="h-10 w-10 text-destructive" />
             <p className="text-lg font-semibold">Invoice Not Found</p>
             <p className="text-sm text-muted-foreground text-center">
-              This invoice link may be invalid or expired.
+              {error || "This invoice link may be invalid or expired."}
             </p>
           </CardContent>
         </Card>
@@ -154,19 +180,40 @@ export default function PublicPayPage() {
               )}
             </div>
           ) : (
-            <Button
-              className="w-full gap-2"
-              size="lg"
-              onClick={handlePayPal}
-              disabled={paying}
-            >
-              {paying ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CreditCard className="h-4 w-4" />
-              )}
-              {paying ? "Processing..." : `Pay $${invoice.amount.toFixed(2)} with PayPal`}
-            </Button>
+            <div className="space-y-3">
+              <div className="grid gap-2">
+                <Label htmlFor="payerName">Your Name *</Label>
+                <Input
+                  id="payerName"
+                  placeholder="Enter your full name"
+                  value={payerName}
+                  onChange={(e) => setPayerName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="payerEmail">Email (optional)</Label>
+                <Input
+                  id="payerEmail"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={payerEmail}
+                  onChange={(e) => setPayerEmail(e.target.value)}
+                />
+              </div>
+              <Button
+                className="w-full gap-2"
+                size="lg"
+                onClick={handlePayPal}
+                disabled={paying || !payerName.trim()}
+              >
+                {paying ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4" />
+                )}
+                {paying ? "Processing..." : `Pay $${invoice.amount.toFixed(2)} with PayPal`}
+              </Button>
+            </div>
           )}
 
           <p className="text-center text-xs text-muted-foreground">

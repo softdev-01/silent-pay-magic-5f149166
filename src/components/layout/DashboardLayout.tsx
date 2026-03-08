@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, CreditCard, FileText, Settings, Users, BarChart3,
-  Wallet, ShieldCheck, Menu, X, LogOut, ChevronDown, Zap, ShoppingCart, Package
+  Wallet, ShieldCheck, Menu, X, LogOut, ChevronDown, Zap, ShoppingCart, Package, Bell
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
@@ -28,6 +28,7 @@ const navItems: Record<UserRole, { label: string; path: string; icon: ReactNode 
     { label: "Invoices", path: "/invoices", icon: <FileText className="h-4 w-4" /> },
     { label: "Services", path: "/services", icon: <Zap className="h-4 w-4" /> },
     { label: "Payments", path: "/payments", icon: <CreditCard className="h-4 w-4" /> },
+    { label: "Received Payments", path: "/provider/payments", icon: <Bell className="h-4 w-4" /> },
     { label: "Customer Analytics", path: "/provider/analytics", icon: <BarChart3 className="h-4 w-4" /> },
     { label: "Settings", path: "/settings", icon: <Settings className="h-4 w-4" /> },
   ],
