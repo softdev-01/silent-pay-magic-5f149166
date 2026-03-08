@@ -6,31 +6,41 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useInvoices } from "@/lib/invoice-context";
 import { useAuth } from "@/lib/auth-context";
-import { Plus, Send, X, QrCode } from "lucide-react";
+import { Plus, Send, X, QrCode, UserPlus } from "lucide-react";
 import { InvoiceQRCode } from "@/components/InvoiceQRCode";
 import { toast } from "@/hooks/use-toast";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockUsers, mockServices } from "@/lib/mock-data";
 import { InvoiceLineItem, Invoice } from "@/lib/types";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function InvoicesPage() {
   const { user } = useAuth();
   const { invoices, addInvoice } = useInvoices();
   const [dialogOpen, setDialogOpen] = useState(false);
+  // Registered customer
   const [customerId, setCustomerId] = useState("");
+  // Walk-in customer
+  const [walkInName, setWalkInName] = useState("");
+  const [walkInEmail, setWalkInEmail] = useState("");
+  const [customerTab, setCustomerTab] = useState<string>("walkin");
+
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [qrInvoice, setQrInvoice] = useState<Invoice | null>(null);
+  const [customServiceName, setCustomServiceName] = useState("");
+  const [customServiceAmount, setCustomServiceAmount] = useState("");
+  const [sending, setSending] = useState(false);
 
   const providerInvoices = invoices.filter((i) => i.providerId === user?.id);
   const customers = mockUsers.filter((u) => u.role === "customer");
   const providerServices = mockServices.filter((s) => s.providerId === user?.id);
-
   const totalAmount = lineItems.reduce((sum, li) => sum + li.amount, 0);
 
   const handleAddService = () => {
@@ -38,6 +48,17 @@ export default function InvoicesPage() {
     if (!svc || lineItems.some((li) => li.serviceId === svc.id)) return;
     setLineItems((prev) => [...prev, { serviceId: svc.id, serviceName: svc.name, amount: svc.price }]);
     setSelectedServiceId("");
+  };
+
+  const handleAddCustomService = () => {
+    if (!customServiceName.trim() || !customServiceAmount) return;
+    const id = `custom-${Date.now()}`;
+    setLineItems((prev) => [
+      ...prev,
+      { serviceId: id, serviceName: customServiceName.trim(), amount: parseFloat(customServiceAmount) || 0 },
+    ]);
+    setCustomServiceName("");
+    setCustomServiceAmount("");
   };
 
   const handleRemoveItem = (serviceId: string) => {
@@ -50,36 +71,121 @@ export default function InvoicesPage() {
     );
   };
 
-  const handleSendInvoice = () => {
-    const customer = customers.find((c) => c.id === customerId);
-    if (!customer || !user || lineItems.length === 0) return;
-
-    const invoiceNum = `INV-2026-${String(invoices.length + 1).padStart(3, "0")}`;
-    const serviceNames = lineItems.map((li) => li.serviceName).join(", ");
-    addInvoice({
-      id: `inv-${Date.now()}`,
-      invoiceNumber: invoiceNum,
-      customerId: customer.id,
-      customerName: customer.name,
-      providerId: user.id,
-      providerName: user.name,
-      serviceName: serviceNames,
-      lineItems,
-      amount: totalAmount,
-      currency: "USD",
-      status: "pending",
-      createdAt: new Date().toISOString().slice(0, 10),
-    });
-
-    toast({ title: "Invoice sent!", description: `${invoiceNum} sent to ${customer.name} for $${totalAmount.toFixed(2)}.` });
+  const resetDialog = () => {
     setDialogOpen(false);
     setCustomerId("");
+    setWalkInName("");
+    setWalkInEmail("");
     setLineItems([]);
     setSelectedServiceId("");
+    setCustomServiceName("");
+    setCustomServiceAmount("");
+    setSending(false);
+  };
+
+  const handleSendInvoice = async () => {
+    if (!user || lineItems.length === 0) return;
+
+    const isWalkIn = customerTab === "walkin";
+    const customerName = isWalkIn ? walkInName.trim() : customers.find((c) => c.id === customerId)?.name;
+
+    if (!customerName) return;
+
+    setSending(true);
+
+    if (isWalkIn) {
+      // Create invoice via edge function for walk-in customer (stored in DB)
+      try {
+        const serviceNames = lineItems.map((li) => li.serviceName).join(", ");
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/create-invoice`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              customerName: walkInName.trim(),
+              customerEmail: walkInEmail.trim() || null,
+              serviceName: serviceNames,
+              lineItems,
+              amount: totalAmount,
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          const err = await res.json();
+          toast({ title: "Failed to create invoice", description: err.error, variant: "destructive" });
+          setSending(false);
+          return;
+        }
+
+        const data = await res.json();
+        const newInvoice: Invoice = {
+          id: data.id,
+          invoiceNumber: data.invoiceNumber,
+          customerId: "",
+          customerName: customerName,
+          providerId: user.id,
+          providerName: user.name,
+          serviceName: serviceNames,
+          lineItems,
+          amount: totalAmount,
+          currency: "USD",
+          status: "pending",
+          createdAt: new Date().toISOString().slice(0, 10),
+        };
+
+        addInvoice(newInvoice);
+        toast({
+          title: "Invoice created!",
+          description: `${data.invoiceNumber} for ${customerName} — $${totalAmount.toFixed(2)}. QR code ready to share!`,
+        });
+        resetDialog();
+        setQrInvoice(newInvoice);
+      } catch {
+        toast({ title: "Error", description: "Failed to create invoice", variant: "destructive" });
+        setSending(false);
+      }
+    } else {
+      // Registered customer — existing flow
+      const customer = customers.find((c) => c.id === customerId);
+      if (!customer) { setSending(false); return; }
+
+      const invoiceNum = `INV-2026-${String(invoices.length + 1).padStart(3, "0")}`;
+      const serviceNames = lineItems.map((li) => li.serviceName).join(", ");
+      const newInvoice: Invoice = {
+        id: `inv-${Date.now()}`,
+        invoiceNumber: invoiceNum,
+        customerId: customer.id,
+        customerName: customer.name,
+        providerId: user.id,
+        providerName: user.name,
+        serviceName: serviceNames,
+        lineItems,
+        amount: totalAmount,
+        currency: "USD",
+        status: "pending",
+        createdAt: new Date().toISOString().slice(0, 10),
+      };
+      addInvoice(newInvoice);
+      toast({ title: "Invoice sent!", description: `${invoiceNum} sent to ${customer.name} for $${totalAmount.toFixed(2)}.` });
+      resetDialog();
+    }
   };
 
   const availableServices = providerServices.filter(
     (s) => !lineItems.some((li) => li.serviceId === s.id)
+  );
+
+  const isValid = lineItems.length > 0 && (
+    customerTab === "walkin" ? walkInName.trim().length > 0 : customerId.length > 0
   );
 
   return (
@@ -125,38 +231,103 @@ export default function InvoicesPage() {
         </CardContent>
       </Card>
 
-      {/* Create & Send Invoice dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {/* Create Invoice dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => !open && resetDialog()}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Send Invoice to Customer</DialogTitle>
+            <DialogTitle>Create Invoice</DialogTitle>
+            <DialogDescription>
+              Create an invoice for a registered customer or a walk-in customer who can pay via QR code.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-2">
-            <div className="grid gap-2">
-              <Label>Customer</Label>
-              <Select value={customerId} onValueChange={setCustomerId}>
-                <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
-                <SelectContent>
-                  {customers.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Customer selection */}
+            <Tabs value={customerTab} onValueChange={setCustomerTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="walkin" className="gap-1.5">
+                  <UserPlus className="h-3.5 w-3.5" /> Walk-in Customer
+                </TabsTrigger>
+                <TabsTrigger value="registered">Registered Customer</TabsTrigger>
+              </TabsList>
+              <TabsContent value="walkin" className="space-y-3 pt-2">
+                <div className="grid gap-2">
+                  <Label>Customer Name *</Label>
+                  <Input
+                    placeholder="Enter customer name"
+                    value={walkInName}
+                    onChange={(e) => setWalkInName(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Email (optional)</Label>
+                  <Input
+                    type="email"
+                    placeholder="customer@email.com"
+                    value={walkInEmail}
+                    onChange={(e) => setWalkInEmail(e.target.value)}
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="registered" className="pt-2">
+                <div className="grid gap-2">
+                  <Label>Customer</Label>
+                  <Select value={customerId} onValueChange={setCustomerId}>
+                    <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
+                    <SelectContent>
+                      {customers.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TabsContent>
+            </Tabs>
 
-            {/* Add services */}
+            {/* Add existing services */}
+            {availableServices.length > 0 && (
+              <div className="grid gap-2">
+                <Label>Add from Your Services</Label>
+                <div className="flex gap-2">
+                  <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder="Select service" /></SelectTrigger>
+                    <SelectContent>
+                      {availableServices.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.name} — ${s.price}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" size="sm" onClick={handleAddService} disabled={!selectedServiceId}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Add custom service/item */}
             <div className="grid gap-2">
-              <Label>Add Services</Label>
+              <Label>Add Custom Item</Label>
               <div className="flex gap-2">
-                <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-                  <SelectTrigger className="flex-1"><SelectValue placeholder="Select service" /></SelectTrigger>
-                  <SelectContent>
-                    {availableServices.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.name} — ${s.price}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button type="button" size="sm" onClick={handleAddService} disabled={!selectedServiceId}>
+                <Input
+                  placeholder="Item name"
+                  value={customServiceName}
+                  onChange={(e) => setCustomServiceName(e.target.value)}
+                  className="flex-1"
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Price"
+                  value={customServiceAmount}
+                  onChange={(e) => setCustomServiceAmount(e.target.value)}
+                  className="w-24"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleAddCustomService}
+                  disabled={!customServiceName.trim() || !customServiceAmount}
+                >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -202,9 +373,9 @@ export default function InvoicesPage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSendInvoice} disabled={!customerId || lineItems.length === 0} className="gap-1.5">
-              <Send className="h-4 w-4" /> Send Invoice
+            <Button variant="outline" onClick={resetDialog}>Cancel</Button>
+            <Button onClick={handleSendInvoice} disabled={!isValid || sending} className="gap-1.5">
+              <Send className="h-4 w-4" /> {sending ? "Creating..." : "Create & Get QR"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -229,6 +400,7 @@ export default function InvoicesPage() {
               </div>
               <p className="text-xs text-muted-foreground text-center">
                 Share this QR code with your customer so they can pay without logging in.
+                Payment history will be automatically recorded.
               </p>
             </div>
           )}
