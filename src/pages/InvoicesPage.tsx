@@ -113,6 +113,11 @@ export default function InvoicesPage() {
                   <TableCell>${inv.amount.toFixed(2)}</TableCell>
                   <TableCell>{inv.createdAt}</TableCell>
                   <TableCell><StatusBadge status={inv.status} /></TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setQrInvoice(inv)}>
+                      <QrCode className="h-3.5 w-3.5" /> QR
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
