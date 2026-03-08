@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockUsers, mockServices } from "@/lib/mock-data";
-import { InvoiceLineItem } from "@/lib/types";
+import { InvoiceLineItem, Invoice } from "@/lib/types";
 
 export default function InvoicesPage() {
   const { user } = useAuth();
