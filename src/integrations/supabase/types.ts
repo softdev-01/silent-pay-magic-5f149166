@@ -176,6 +176,59 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_notifications: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          invoice_id: string
+          invoice_number: string
+          is_read: boolean
+          paid_at: string
+          payer_email: string | null
+          payer_name: string
+          provider_id: string
+          service_name: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_id: string
+          invoice_number: string
+          is_read?: boolean
+          paid_at?: string
+          payer_email?: string | null
+          payer_name: string
+          provider_id: string
+          service_name?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_id?: string
+          invoice_number?: string
+          is_read?: boolean
+          paid_at?: string
+          payer_email?: string | null
+          payer_name?: string
+          provider_id?: string
+          service_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_notifications_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar: string | null
