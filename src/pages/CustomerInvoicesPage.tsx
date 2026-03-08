@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useInvoices } from "@/lib/invoice-context";
 import { useAuth } from "@/lib/auth-context";
 import { CreditCard, CheckCircle, Receipt, Download } from "lucide-react";
+import { InvoiceQRCode } from "@/components/InvoiceQRCode";
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
