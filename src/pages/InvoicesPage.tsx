@@ -25,6 +25,7 @@ export default function InvoicesPage() {
   const [customerId, setCustomerId] = useState("");
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState("");
+  const [qrInvoice, setQrInvoice] = useState<Invoice | null>(null);
 
   const providerInvoices = invoices.filter((i) => i.providerId === user?.id);
   const customers = mockUsers.filter((u) => u.role === "customer");
