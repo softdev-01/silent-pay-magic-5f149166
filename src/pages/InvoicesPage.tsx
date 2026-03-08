@@ -391,15 +391,16 @@ export default function InvoicesPage() {
           </DialogHeader>
           {qrInvoice && (
             <div className="flex flex-col items-center gap-4 py-4">
-              <InvoiceQRCode invoiceId={qrInvoice.id} size={180} />
-              <div className="text-center">
-                <p className="text-sm font-medium">{qrInvoice.invoiceNumber}</p>
-                <p className="text-xs text-muted-foreground">
-                  ${qrInvoice.amount.toFixed(2)} — {qrInvoice.customerName}
-                </p>
-              </div>
+              <InvoiceQRCode
+                invoiceId={qrInvoice.id}
+                size={180}
+                invoiceNumber={qrInvoice.invoiceNumber}
+                customerName={qrInvoice.customerName}
+                amount={qrInvoice.amount}
+                showActions
+              />
               <p className="text-xs text-muted-foreground text-center">
-                Share this QR code with your customer so they can pay without logging in.
+                Download or print this QR code and hand it to your customer.
                 Payment history will be automatically recorded.
               </p>
             </div>
