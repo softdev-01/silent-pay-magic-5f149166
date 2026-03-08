@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useInvoices } from "@/lib/invoice-context";
 import { useAuth } from "@/lib/auth-context";
 import { CreditCard, CheckCircle, Receipt, Download } from "lucide-react";
+import { InvoiceQRCode } from "@/components/InvoiceQRCode";
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -228,6 +229,11 @@ export default function CustomerInvoicesPage() {
               <div className="rounded-md border border-green-200 bg-green-50 p-3 text-center dark:border-green-800 dark:bg-green-950">
                 <CheckCircle className="mx-auto mb-1 h-6 w-6 text-green-600 dark:text-green-400" />
                 <p className="text-sm font-medium text-green-700 dark:text-green-300">Payment Complete</p>
+              </div>
+
+              <div className="flex flex-col items-center pt-2">
+                <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Share Payment Link</p>
+                <InvoiceQRCode invoiceId={receiptInvoice.id} size={100} />
               </div>
             </div>
           )}

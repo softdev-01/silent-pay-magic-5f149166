@@ -6,7 +6,8 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useInvoices } from "@/lib/invoice-context";
 import { useAuth } from "@/lib/auth-context";
-import { Plus, Send, X } from "lucide-react";
+import { Plus, Send, X, QrCode } from "lucide-react";
+import { InvoiceQRCode } from "@/components/InvoiceQRCode";
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -15,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockUsers, mockServices } from "@/lib/mock-data";
-import { InvoiceLineItem } from "@/lib/types";
+import { InvoiceLineItem, Invoice } from "@/lib/types";
 
 export default function InvoicesPage() {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ export default function InvoicesPage() {
   const [customerId, setCustomerId] = useState("");
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState("");
+  const [qrInvoice, setQrInvoice] = useState<Invoice | null>(null);
 
   const providerInvoices = invoices.filter((i) => i.providerId === user?.id);
   const customers = mockUsers.filter((u) => u.role === "customer");
@@ -99,6 +101,7 @@ export default function InvoicesPage() {
                 <TableHead>Amount</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-right">QR</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -110,6 +113,11 @@ export default function InvoicesPage() {
                   <TableCell>${inv.amount.toFixed(2)}</TableCell>
                   <TableCell>{inv.createdAt}</TableCell>
                   <TableCell><StatusBadge status={inv.status} /></TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setQrInvoice(inv)}>
+                      <QrCode className="h-3.5 w-3.5" /> QR
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -198,6 +206,34 @@ export default function InvoicesPage() {
             <Button onClick={handleSendInvoice} disabled={!customerId || lineItems.length === 0} className="gap-1.5">
               <Send className="h-4 w-4" /> Send Invoice
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Code dialog */}
+      <Dialog open={!!qrInvoice} onOpenChange={(open) => !open && setQrInvoice(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-primary" /> Invoice QR Code
+            </DialogTitle>
+          </DialogHeader>
+          {qrInvoice && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <InvoiceQRCode invoiceId={qrInvoice.id} size={180} />
+              <div className="text-center">
+                <p className="text-sm font-medium">{qrInvoice.invoiceNumber}</p>
+                <p className="text-xs text-muted-foreground">
+                  ${qrInvoice.amount.toFixed(2)} — {qrInvoice.customerName}
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Share this QR code with your customer so they can pay without logging in.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQrInvoice(null)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
