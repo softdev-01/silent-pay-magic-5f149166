@@ -209,6 +209,34 @@ export default function InvoicesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* QR Code dialog */}
+      <Dialog open={!!qrInvoice} onOpenChange={(open) => !open && setQrInvoice(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-primary" /> Invoice QR Code
+            </DialogTitle>
+          </DialogHeader>
+          {qrInvoice && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <InvoiceQRCode invoiceId={qrInvoice.id} size={180} />
+              <div className="text-center">
+                <p className="text-sm font-medium">{qrInvoice.invoiceNumber}</p>
+                <p className="text-xs text-muted-foreground">
+                  ${qrInvoice.amount.toFixed(2)} — {qrInvoice.customerName}
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Share this QR code with your customer so they can pay without logging in.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQrInvoice(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
