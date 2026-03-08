@@ -101,6 +101,7 @@ export default function InvoicesPage() {
                 <TableHead>Amount</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-right">QR</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
