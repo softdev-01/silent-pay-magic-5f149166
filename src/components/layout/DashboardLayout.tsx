@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, CreditCard, FileText, Settings, Users, BarChart3,
-  Wallet, ShieldCheck, Menu, X, LogOut, ChevronDown, Zap, ShoppingCart, Package
+  Wallet, ShieldCheck, Menu, X, LogOut, ChevronDown, Zap, ShoppingCart, Package, Bell
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
